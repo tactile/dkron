@@ -6,6 +6,7 @@ require (
 	github.com/armon/go-metrics v0.3.4
 	github.com/aws/aws-sdk-go v1.34.17 // indirect
 	github.com/fluent/fluent-logger-golang v1.5.0
+	github.com/gin-contrib/cors v1.3.1
 	github.com/gin-contrib/expvar v0.0.1
 	github.com/gin-contrib/multitemplate v0.0.0-20200226145339-3e397ee01bc6
 	github.com/gin-gonic/gin v1.6.3

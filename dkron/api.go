@@ -6,7 +6,10 @@ import (
 	"io/ioutil"
 	"net/http"
 	"sort"
+	"strconv"
+	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/expvar"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -43,10 +46,17 @@ func (h *HTTPTransport) ServeHTTP() {
 	h.Engine.HTMLRender = CreateMyRender()
 	rootPath := h.Engine.Group("/")
 
+	rootPath.Use(h.MetaMiddleware())
+	rootPath.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"*"},
+		AllowMethods:     []string{"*"},
+		ExposeHeaders:    []string{"*"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
+
 	h.APIRoutes(rootPath)
 	h.agent.DashboardRoutes(rootPath)
-
-	h.Engine.Use(h.MetaMiddleware())
 
 	log.WithFields(logrus.Fields{
 		"address": h.agent.config.HTTPAddr,
@@ -140,8 +150,8 @@ func (h *HTTPTransport) jobsHandler(c *gin.Context) {
 		log.WithError(err).Error("api: Unable to get jobs, store not reachable.")
 		return
 	}
-	// Ask all server peers for connections
-	// Range through jobs and assing running based on peers connections
+
+	c.Header("X-Total-Count", strconv.Itoa(len(jobs)))
 
 	renderJSON(c, http.StatusOK, jobs)
 }
