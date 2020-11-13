@@ -1,17 +1,12 @@
-FROM golang:1.14
-LABEL maintainer="Victor Castell <victor@victorcastell.com>"
 
-EXPOSE 8080 8946
+FROM dkron/dkron
+WORKDIR /root/scheduler
+COPY Scheduler.java /root/scheduler
+COPY Startup.jar /root/scheduler
 
-RUN mkdir -p /app
-WORKDIR /app
+RUN apk add openjdk8
 
-ENV GO111MODULE=on
-COPY go.mod go.mod
-COPY go.sum go.sum
-RUN go mod download
+ENV JAVA_HOME /usr/lib/jvm/java-1.8-openjdk
+ENV PATH $JAVA_HOME/bin:$PATH
 
-COPY . .
-RUN go install ./...
-
-CMD ["dkron"]
+RUN javac Scheduler.java
