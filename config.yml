@@ -1,0 +1,27 @@
+development: &dev
+  archmaesterUrl: http://localhost:8085/scheduler/v1
+  dkronUrl: http://localhost:8080/v1
+  client_id: clientId
+  secret: clientSecret
+
+test:
+  <<: *dev
+
+dev1:
+  archmaesterUrl: http://localhost:8085/v1/scheduler
+  dkronUrl: http://localhost:8080
+  client_id: clientId
+  secret: clientSecret
+
+dev2:
+  archmaesterUrl: http://localhost:8085/v1/scheduler
+  dkronUrl: http://localhost:8080
+  client_id: clientId
+  secret: clientSecret
+
+production:
+  archmaesterUrl: http://localhost:8085/v1/scheduler
+  dkronUrl: http://localhost:8080
+  client_id: clientId
+  secret: clientSecret
+
