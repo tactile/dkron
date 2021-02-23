@@ -23,4 +23,7 @@ public class DkronConfig extends Config{
     public static String getSecret(){
         return map.get("secret").toString();
     }
+    public static String getDkronTags(){
+        return map.get("dkronTags").toString();
+    }
 }
