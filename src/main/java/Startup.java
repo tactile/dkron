@@ -5,6 +5,7 @@
  * 2.
  */
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -99,7 +100,7 @@ public class Startup
                 response.append(readLine);
             }
             in .close();
-            System.out.println("JSON String Result " + response.toString() +"\n\n");
+            //System.out.println("JSON String Result " + response.toString() +"\n\n");
             //pass this response to Dkron similar to that I did in Kingslayer side
             addJobs2Dkron(response.toString());
 
@@ -112,15 +113,27 @@ public class Startup
     }
 
     private void addSingleJob (JobModel jobModel) throws IOException {
-
-        String payload = "{\"name\": \"" + jobModel.name +
-                "\", \"schedule\": \"" + jobModel.schedule +
-                "\", \"concurrency\": \"allow\",";
-        payload += "\"executor\": \"shell\", \"executor_config\": { \"command\": \"java hello\"}}";
-        //here we need to pass callback url and auth token as argument to java scheduler command
-
+    
+        ObjectMapper objectMapper = new ObjectMapper();
+        ObjectNode jobPayload = objectMapper.createObjectNode();
+        ObjectNode command = objectMapper.createObjectNode();
+        String service = jobModel.getService();
+        String jobName = jobModel.getName();
+        command.put("method", "GET");
+        command.put("timeout", "30");
+        command.put("url", AMBaseUrl + "/callback/" + service + "/" + jobName);
+        ObjectNode tags = objectMapper.createObjectNode();
+        tags.put("agent", "true");
+    
+        jobPayload.put("name", jobName);
+        jobPayload.put("schedule", jobModel.getSchedule());
+        jobPayload.put("executor", "http");
+        jobPayload.put("concurrency", "forbid");
+        jobPayload.set("executor_config", command);
+        if (getDkronTags() != null) {
+            jobPayload.set("tags", tags);
+        }
         URL dkronURL = new URL(DKRON_JOB_URI);
-
         HttpURLConnection con = (HttpURLConnection) dkronURL.openConnection ();
         con.setRequestMethod ("POST");
         con.setRequestProperty ("Content-Type", "application/json; utf-8");
@@ -128,11 +141,11 @@ public class Startup
         con.setDoOutput (true);
 
         try (OutputStream os = con.getOutputStream ()) {
-            byte[] input = payload.getBytes (StandardCharsets.UTF_8);
+            byte[] input = jobPayload.toString().getBytes (StandardCharsets.UTF_8);
             os.write (input, 0, input.length);
         }
         try (BufferedReader br = new BufferedReader (
-                new InputStreamReader (con.getInputStream (), StandardCharsets.UTF_8))) {
+                new InputStreamReader (con.getInputStream(), StandardCharsets.UTF_8))) {
             StringBuilder response = new StringBuilder ();
             String responseLine = null;
             while ((responseLine = br.readLine ()) != null) {
